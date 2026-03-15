@@ -510,7 +510,7 @@ const ALL_EX = {};
 
 // ── Firebase ──────────────────────────────────────────────────────────────────
 const firebaseConfig = {
-  apiKey: "AIzaSyC6tpkNq6tIFYpkhYatSc0vbTOn7s3M7II",
+  apiKey: "AIzaSyDU374whqqeDc-_Z3IkZ8NPZdUZxRokT_c",
   authDomain: "body-build-app.firebaseapp.com",
   projectId: "body-build-app",
   storageBucket: "body-build-app.firebasestorage.app",
@@ -871,6 +871,19 @@ async function init() {
   renderToday();
   renderDayNav(DAYS_IDX[new Date().getDay()]);
 }
+
+// Expose functions to window (required for onclick handlers with type="module")
+window.showSection   = showSection;
+window.toggleWhoop   = toggleWhoop;
+window.setRecovery   = setRecovery;
+window.toggleEx      = toggleEx;
+window.saveEx        = saveEx;
+window.startTimer    = startTimer;
+window.toggleTimer   = toggleTimer;
+window.stopTimer     = stopTimer;
+window.renderRoutine = renderRoutine;
+window.renderProgress= renderProgress;
+
 init();
 </script>
 </body>
