@@ -469,7 +469,9 @@
 
 <div class="toast" id="toast"></div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 // ── Data ────────────────────────────────────────────────────────────────────
 const DAYS_IDX = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 
@@ -506,26 +508,68 @@ const ROUTINE = {
 const ALL_EX = {};
 ['Mar','Jue'].forEach(d => (ROUTINE[d].exercises||[]).forEach(e => { ALL_EX[e.id] = e; }));
 
+// ── Firebase ──────────────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyC6tpkNq6tIFYpkhYatSc0vbTOn7s3M7II",
+  authDomain: "body-build-app.firebaseapp.com",
+  projectId: "body-build-app",
+  storageBucket: "body-build-app.firebasestorage.app",
+  messagingSenderId: "1037619164414",
+  appId: "1:1037619164414:web:6960763e9f4c49961fe1af"
+};
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+const USER_DOC = "users/gonzalo";
+
 // ── State ────────────────────────────────────────────────────────────────────
-let logs = {};         // { "exId_date": [{w,r}, ...], "notes_exId_date": "texto" }
-let recovery = null;   // 'green' | 'amber' | 'red'
+let logs = {};
+let recovery = null;
 let currentSection = 'today';
 let currentRoutineDay = null;
 let whoopOpen = false;
+let saveTimeout = null;
 
-// ── LocalStorage (works fine on Vercel) ─────────────────────────────────────
-function loadData() {
+function today() { return new Date().toISOString().slice(0,10); }
+
+async function loadData() {
+  // Load from Firestore, fallback to localStorage while offline
   try {
-    const d = localStorage.getItem('gw_logs_v3');
-    if (d) logs = JSON.parse(d);
-    const r = localStorage.getItem('gw_recovery_' + today());
-    if (r) recovery = r;
-  } catch(e) { logs = {}; }
-}
-function saveData() {
+    const snap = await getDoc(doc(db, USER_DOC));
+    if (snap.exists()) {
+      const data = snap.data();
+      logs = data.logs || {};
+      const r = (data.recovery || {})[today()];
+      if (r) recovery = r;
+    }
+  } catch(e) {
+    // Offline fallback
+    try {
+      const d = localStorage.getItem('gw_logs_v3');
+      if (d) logs = JSON.parse(d);
+      const r = localStorage.getItem('gw_recovery_' + today());
+      if (r) recovery = r;
+    } catch(e2) { logs = {}; }
+  }
+  // Always mirror to localStorage as offline cache
   try { localStorage.setItem('gw_logs_v3', JSON.stringify(logs)); } catch(e) {}
 }
-function today() { return new Date().toISOString().slice(0,10); }
+
+async function saveData() {
+  // Debounce saves — wait 800ms after last call before writing
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(async () => {
+    // Save to localStorage immediately as cache
+    try { localStorage.setItem('gw_logs_v3', JSON.stringify(logs)); } catch(e) {}
+    // Save to Firestore
+    try {
+      const recoveryData = {};
+      if (recovery) recoveryData[today()] = recovery;
+      await setDoc(doc(db, USER_DOC), { logs, recovery: recoveryData }, { merge: true });
+    } catch(e) {
+      console.warn('Firestore save failed, data cached locally:', e);
+    }
+  }, 800);
+}
 
 // ── Whoop ────────────────────────────────────────────────────────────────────
 const ADVICE = {
@@ -539,7 +583,9 @@ function toggleWhoop() {
 }
 function setRecovery(level) {
   recovery = level;
-  localStorage.setItem('gw_recovery_' + today(), level);
+  // Save recovery to Firestore via saveData merge
+  try { localStorage.setItem('gw_recovery_' + today(), level); } catch(e) {}
+  saveData();
   const dot = document.getElementById('whoop-dot');
   const lbl = document.getElementById('whoop-label');
   dot.className = 'whoop-dot ' + level;
@@ -818,10 +864,14 @@ function renderProgress() {
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────
-loadData();
-initWhoop();
-renderToday();
-renderDayNav(DAYS_IDX[new Date().getDay()]);
+async function init() {
+  document.getElementById('header-subtitle').textContent = 'Cargando datos...';
+  await loadData();
+  initWhoop();
+  renderToday();
+  renderDayNav(DAYS_IDX[new Date().getDay()]);
+}
+init();
 </script>
 </body>
 </html>
