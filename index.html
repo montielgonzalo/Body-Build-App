@@ -205,13 +205,13 @@
   /* Sets table */
   .sets-wrap { margin-bottom: 10px; }
   .sets-head {
-    display: grid; grid-template-columns: 28px 1fr 1fr 72px;
+    display: grid; grid-template-columns: 28px 1fr 1fr 52px 28px;
     gap: 6px; padding: 0 4px 6px;
     font-size: 11px; color: var(--text3); font-weight: 500;
     border-bottom: 1px solid var(--border);
   }
   .set-row {
-    display: grid; grid-template-columns: 28px 1fr 1fr 72px;
+    display: grid; grid-template-columns: 28px 1fr 1fr 52px 28px;
     gap: 6px; padding: 6px 4px; align-items: center;
     border-bottom: 1px solid var(--border);
   }
@@ -225,10 +225,36 @@
   }
   .inp:focus { border-color: var(--accent); }
   .inp::placeholder { color: var(--text3); }
+  .inp:disabled { opacity: .45; cursor: default; }
   .inp-prev {
     font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace;
     text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
+  .btn-edit-set {
+    background: none; border: none; cursor: pointer; color: var(--text3);
+    font-size: 13px; padding: 2px; border-radius: 4px; transition: color .15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .btn-edit-set:hover { color: var(--accent2); }
+  .btn-edit-set.active { color: var(--accent2); }
+
+  /* Volume bar */
+  .volume-wrap {
+    margin: 14px 20px 0;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--r2); padding: 14px 16px;
+  }
+  .volume-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+  }
+  .volume-title { font-size: 13px; font-weight: 500; color: var(--text2); }
+  .volume-total { font-size: 13px; font-family: 'DM Mono', monospace; color: var(--accent2); font-weight: 500; }
+  .volume-rows { display: flex; flex-direction: column; gap: 8px; }
+  .volume-row { display: flex; align-items: center; gap: 10px; }
+  .volume-label { font-size: 12px; color: var(--text3); width: 130px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .volume-bar-wrap { flex: 1; height: 6px; background: var(--bg4); border-radius: 3px; overflow: hidden; }
+  .volume-bar-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width .4s ease; opacity: .7; }
+  .volume-count { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--text3); width: 36px; text-align: right; flex-shrink: 0; }
 
   /* Notes */
   .notes-wrap { margin-bottom: 10px; }
@@ -347,7 +373,54 @@
   .bar-val { font-size: 10px; color: var(--text3); font-family: 'DM Mono', monospace; }
   .bar-date { font-size: 9px; color: var(--text3); text-align: center; line-height: 1.3; }
 
-  /* ── Empty / rest states ── */
+  .ex-card.saved { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+
+  /* ── Welcome screen ── */
+  .welcome {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 1000; padding: 32px 24px; text-align: center;
+    transition: opacity .4s, transform .4s;
+  }
+  .welcome.hide { opacity: 0; transform: translateY(-16px); pointer-events: none; }
+  .welcome-logo { font-size: 48px; margin-bottom: 16px; }
+  .welcome h2 { font-size: 24px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 6px; }
+  .welcome .welcome-date { font-size: 14px; color: var(--text3); margin-bottom: 28px; }
+  .welcome-cards { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 320px; margin-bottom: 28px; }
+  .welcome-card {
+    background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: var(--r2); padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px; text-align: left;
+  }
+  .welcome-card-icon { font-size: 22px; flex-shrink: 0; }
+  .welcome-card-title { font-size: 13px; font-weight: 500; color: var(--text2); }
+  .welcome-card-val { font-size: 16px; font-weight: 600; color: var(--text); margin-top: 1px; }
+  .welcome-card.accent { border-color: var(--accent); background: var(--accent-bg); }
+  .welcome-card.green  { border-color: var(--green);  background: var(--green-bg); }
+  .welcome-card.amber  { border-color: var(--amber);  background: var(--amber-bg); }
+  .welcome-card.red    { border-color: var(--red);    background: var(--red-bg); }
+  .btn-start {
+    width: 100%; max-width: 320px; padding: 14px;
+    background: var(--accent); color: #fff; border: none;
+    border-radius: var(--r2); font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity .2s;
+    letter-spacing: .2px;
+  }
+  .btn-start:hover { opacity: .85; }
+
+  /* ── Fill-all dialog ── */
+  .fill-dialog {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%) translateY(100%);
+    width: 100%; max-width: 480px; background: var(--bg3);
+    border-top: 1px solid var(--border2); border-radius: var(--r2) var(--r2) 0 0;
+    padding: 16px 20px 32px; z-index: 800; transition: transform .3s ease;
+  }
+  .fill-dialog.show { transform: translateX(-50%) translateY(0); }
+  .fill-dialog h4 { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+  .fill-dialog p { font-size: 13px; color: var(--text2); margin-bottom: 14px; line-height: 1.5; }
+  .fill-dialog-btns { display: flex; gap: 8px; }
+  .fill-btn { flex: 1; padding: 10px; border-radius: var(--r); font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--border2); background: var(--bg4); color: var(--text2); transition: all .2s; }
+  .fill-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
   .empty-state {
     text-align: center; padding: 40px 20px;
     color: var(--text3); font-size: 14px; line-height: 1.7;
@@ -405,7 +478,9 @@
       <div class="day-title" id="today-title">—</div>
       <div class="day-type-tag" id="today-tag"></div>
     </div>
-    <div class="ex-list" id="today-list"></div>
+    <!-- Volume indicator -->
+  <div id="today-volume"></div>
+  <div class="ex-list" id="today-list"></div>
   </div>
 
   <!-- Routine section -->
@@ -440,7 +515,26 @@
 
 </div>
 
-<!-- Bottom Nav -->
+<!-- Welcome screen -->
+<div class="welcome" id="welcome">
+  <div class="welcome-logo">💪</div>
+  <h2>Body Build App</h2>
+  <div class="welcome-date" id="welcome-date"></div>
+  <div class="welcome-cards" id="welcome-cards"></div>
+  <button class="btn-start" onclick="dismissWelcome()">Empezar entrenamiento →</button>
+</div>
+
+<!-- Fill-all dialog -->
+<div class="fill-dialog" id="fill-dialog">
+  <h4 id="fill-dialog-title">Completar series</h4>
+  <p id="fill-dialog-body"></p>
+  <div class="fill-dialog-btns">
+    <button class="fill-btn" onclick="dismissFill()">No, solo esta</button>
+    <button class="fill-btn primary" onclick="confirmFill()">Sí, completar todas</button>
+  </div>
+</div>
+
+
 <div class="bottom-nav">
   <button class="nav-btn active" id="nav-today" onclick="showSection('today')">
     <span class="nav-icon">🏠</span>HOY
@@ -496,7 +590,7 @@ const ROUTINE = {
     { id:'curl_barra',   name:'Curl con barra EZ',        detail:'3 × 10–12 | 60s', sets:3, rest:60,  tip:'Sin balanceo de torso. Codos fijos. Supina la muñeca al subir.', img:'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Curl/0.jpg', img2:'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Barbell_Curl/1.jpg' },
     { id:'curl_martillo',name:'Curl martillo alternado',  detail:'3 × 12 | 60s',    sets:3, rest:60,  tip:'Agarre neutro. Trabaja braquial y braquiorradial. Controlá la bajada 2 seg.', img:'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hammer_Curls/0.jpg', img2:'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Hammer_Curls/1.jpg' },
     { id:'rdl',          name:'Romanian deadlift',        detail:'4 × 10–12 | 90s', sets:4, rest:90,  tip:'Bisagra de cadera. Espalda neutral siempre. Bajá hasta sentir el estiramiento.', img:'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Romanian_Deadlift/0.jpg', img2:'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Romanian_Deadlift/1.jpg' },
-    { id:'curl_fem',     name:'Curl femoral acostado',    detail:'3 × 12–15 | 75s', sets:3, rest:75,  tip:'Caderas pegadas al banco. Subí hasta 90°. Pausa al final.', img:'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Lying_Leg_Curls/0.jpg', img2:'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Lying_Leg_Curls/1.jpg' },
+    { id:'curl_fem',     name:'Curl femoral sentado',     detail:'3 × 12–15 | 75s', sets:3, rest:75,  tip:'Sentado en la máquina, espalda recta. Tirá con los talones hacia abajo. Pausa al final con contracción máxima.', img:'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Leg_Curl/0.jpg', img2:'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Seated_Leg_Curl/1.jpg' },
     { id:'gemelos',      name:'Elevaciones de talones',   detail:'4 × 15–20 | 60s', sets:4, rest:60,  tip:'Rango completo. Pausa de 1 seg arriba. Probá unilateral si el bilateral es fácil.', img:'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Calf_Raises/0.jpg', img2:'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Standing_Calf_Raises/1.jpg' },
   ]},
   Vie: { type:'crossfit', label:'CrossFit — Día 3', exercises:[] },
@@ -623,6 +717,8 @@ function startTimer(secs) {
       document.getElementById('timer-num').classList.add('done');
       document.getElementById('timer-bar').style.width = '0%';
       document.getElementById('timer-toggle').textContent = 'Cerrar';
+      // Vibrate on supported devices
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
     }
   }, 1000);
 }
@@ -690,14 +786,19 @@ function renderExList(exercises, dayKey, container, titleEl, tagEl2) {
       .sort().reverse();
     const prevLog = prevSessions.length ? logs[prevSessions[0]] : null;
     const existingNote = logs[`notes_${ex.id}_${td}`] || '';
+    const td = today();
+    // Check if this exercise has saved data today (inputs start locked)
+    const hasSaved = !!(logs[`${ex.id}_${td}`] && logs[`${ex.id}_${td}`].some(s => s.w || s.r));
     const setsRows = Array.from({length:ex.sets},(_,si) => {
       const existing = logs[`${ex.id}_${td}`] ? logs[`${ex.id}_${td}`][si] : null;
       const prev = prevLog ? prevLog[si] : null;
-      return `<div class="set-row">
+      const disabled = hasSaved ? 'disabled' : '';
+      return `<div class="set-row" id="setrow_${ex.id}_${si}">
         <div class="set-num">${si+1}</div>
-        <input class="inp" type="number" placeholder="kg" id="w_${ex.id}_${si}" value="${existing&&existing.w?existing.w:''}" min="0" step="0.5">
-        <input class="inp" type="number" placeholder="reps" id="r_${ex.id}_${si}" value="${existing&&existing.r?existing.r:''}" min="0">
+        <input class="inp" type="number" placeholder="kg" id="w_${ex.id}_${si}" value="${existing&&existing.w?existing.w:''}" min="0" step="0.5" ${disabled} oninput="onSetInput('${ex.id}',${si},'w',this.value,${ex.sets})">
+        <input class="inp" type="number" placeholder="reps" id="r_${ex.id}_${si}" value="${existing&&existing.r?existing.r:''}" min="0" ${disabled} oninput="onSetInput('${ex.id}',${si},'r',this.value,${ex.sets})">
         <div class="inp-prev">${prev&&prev.w?prev.w+'×'+prev.r:'—'}</div>
+        <button class="btn-edit-set" onclick="toggleEditSet('${ex.id}',${si})" title="Editar">✏️</button>
       </div>`;
     }).join('');
     const imgHtml = ex.img
@@ -722,7 +823,7 @@ function renderExList(exercises, dayKey, container, titleEl, tagEl2) {
         ${imgHtml}
         <div class="ex-tip">💡 ${ex.tip}</div>
         <div class="sets-wrap">
-          <div class="sets-head"><div>#</div><div>Peso</div><div>Reps</div><div style="text-align:right">Anterior</div></div>
+          <div class="sets-head"><div>#</div><div>Peso</div><div>Reps</div><div style="text-align:right">Ant.</div><div></div></div>
           ${setsRows}
         </div>
         <div class="notes-wrap">
@@ -730,7 +831,7 @@ function renderExList(exercises, dayKey, container, titleEl, tagEl2) {
           <textarea class="notes-inp" id="note_${ex.id}" rows="2" placeholder="Sensaciones, ajustes, próxima vez...">${existingNote}</textarea>
         </div>
         <div class="btn-row">
-          <button class="btn-save" onclick="saveEx('${ex.id}',${ex.sets},${ex.rest})">Guardar</button>
+          <button class="btn-save" onclick="saveEx('${ex.id}',${ex.sets})">Guardar</button>
           <button class="btn-timer" onclick="startTimer(${ex.rest})">⏱ ${ex.rest >= 60 ? (ex.rest/60)+'min' : ex.rest+'s'}</button>
         </div>
       </div>
@@ -739,10 +840,15 @@ function renderExList(exercises, dayKey, container, titleEl, tagEl2) {
 }
 
 function toggleEx(id) {
-  document.getElementById('card_'+id).classList.toggle('open');
+  const target = document.getElementById('card_'+id);
+  const isOpen = target.classList.contains('open');
+  // Close all open cards first (accordion)
+  document.querySelectorAll('.ex-card.open').forEach(c => c.classList.remove('open'));
+  // If it wasn't open, open it
+  if (!isOpen) target.classList.add('open');
 }
 
-function saveEx(exId, numSets, rest) {
+function saveEx(exId, numSets) {
   const td = today();
   const sets = Array.from({length:numSets},(_,i) => ({
     w: document.getElementById(`w_${exId}_${i}`)?.value || '',
@@ -754,10 +860,177 @@ function saveEx(exId, numSets, rest) {
   else delete logs[`notes_${exId}_${td}`];
   saveData();
   toast('✓ Guardado');
-  startTimer(rest);
+  // Highlight saved card
+  const card = document.getElementById('card_'+exId);
+  if (card) card.classList.add('saved');
+  // Refresh volume
+  renderVolumeWidget('today-volume');
 }
 
-// ── Today ────────────────────────────────────────────────────────────────────
+// ── Edit single set ───────────────────────────────────────────────────────────
+function toggleEditSet(exId, si) {
+  const wInp = document.getElementById(`w_${exId}_${si}`);
+  const rInp = document.getElementById(`r_${exId}_${si}`);
+  const btn  = document.querySelector(`#setrow_${exId}_${si} .btn-edit-set`);
+  if (!wInp) return;
+  const isLocked = wInp.disabled;
+  wInp.disabled = !isLocked;
+  rInp.disabled = !isLocked;
+  if (btn) btn.classList.toggle('active', isLocked);
+  if (isLocked) wInp.focus();
+}
+
+// ── Weekly volume ─────────────────────────────────────────────────────────────
+function getWeekStart() {
+  const d = new Date();
+  const day = d.getDay(); // 0=Sun
+  const diff = (day === 0) ? -6 : 1 - day; // Monday
+  const mon = new Date(d);
+  mon.setDate(d.getDate() + diff);
+  return mon.toISOString().slice(0,10);
+}
+
+function renderVolumeWidget(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const weekStart = getWeekStart();
+
+  // Count sets per exercise this week
+  const allExercises = ['Mar','Jue'].flatMap(d => ROUTINE[d].exercises || []);
+  const volumeData = allExercises.map(ex => {
+    const weekKeys = Object.keys(logs).filter(k =>
+      k.startsWith(ex.id+'_') && !k.startsWith('notes_') &&
+      k.split('_').pop() >= weekStart
+    );
+    const sets = weekKeys.reduce((acc, k) => {
+      return acc + (logs[k] || []).filter(s => s.w || s.r).length;
+    }, 0);
+    return { name: ex.name, sets, target: ex.sets * 2 }; // 2 sessions/week target
+  }).filter(d => d.sets > 0);
+
+  if (!volumeData.length) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const totalSets = volumeData.reduce((a,b) => a + b.sets, 0);
+  const maxSets = Math.max(...volumeData.map(d => d.sets));
+
+  container.innerHTML = `
+    <div class="volume-wrap">
+      <div class="volume-header">
+        <div class="volume-title">📊 Volumen esta semana</div>
+        <div class="volume-total">${totalSets} series</div>
+      </div>
+      <div class="volume-rows">
+        ${volumeData.map(d => `
+          <div class="volume-row">
+            <div class="volume-label">${d.name}</div>
+            <div class="volume-bar-wrap">
+              <div class="volume-bar-fill" style="width:${Math.round((d.sets/maxSets)*100)}%"></div>
+            </div>
+            <div class="volume-count">${d.sets}/${d.target}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+
+let fillPending = null; // { exId, field, value, numSets }
+let fillDebounce = null;
+
+function onSetInput(exId, setIdx, field, value, numSets) {
+  // Only prompt if it's the first set and value is meaningful
+  if (setIdx !== 0 || !value) return;
+  clearTimeout(fillDebounce);
+  fillDebounce = setTimeout(() => {
+    // Check if other sets are still empty for this field
+    const othersEmpty = Array.from({length:numSets},(_,i)=>i)
+      .filter(i => i !== 0)
+      .some(i => {
+        const el = document.getElementById(`${field}_${exId}_${i}`);
+        return el && !el.value;
+      });
+    if (!othersEmpty) return;
+    fillPending = { exId, field, value, numSets };
+    const fieldLabel = field === 'w' ? 'peso' : 'repeticiones';
+    document.getElementById('fill-dialog-title').textContent = `¿Replicar ${fieldLabel}?`;
+    document.getElementById('fill-dialog-body').textContent =
+      `Ingresaste ${value}${field==='w'?'kg':'rep'} en la serie 1. ¿Querés aplicar el mismo valor a las series restantes?`;
+    document.getElementById('fill-dialog').classList.add('show');
+  }, 600);
+}
+
+function confirmFill() {
+  if (!fillPending) return;
+  const { exId, field, value, numSets } = fillPending;
+  Array.from({length:numSets},(_,i)=>i).forEach(i => {
+    const el = document.getElementById(`${field}_${exId}_${i}`);
+    if (el && !el.value) el.value = value;
+  });
+  dismissFill();
+}
+
+function dismissFill() {
+  fillPending = null;
+  document.getElementById('fill-dialog').classList.remove('show');
+}
+
+// ── Welcome screen ────────────────────────────────────────────────────────────
+function showWelcome() {
+  const dk = DAYS_IDX[new Date().getDay()];
+  const info = ROUTINE[dk];
+  const d = new Date();
+  document.getElementById('welcome-date').textContent =
+    d.toLocaleDateString('es-AR', {weekday:'long', day:'numeric', month:'long'});
+
+  const typeLabel = {gym:'Gym 🏋️', crossfit:'CrossFit ⚡', rest:'Descanso 😴'}[info.type];
+  const typeClass = {gym:'accent', crossfit:'green', rest:''}[info.type] || '';
+
+  // Recovery card
+  const recLabels = {green:'Alto 🟢', amber:'Medio 🟡', red:'Bajo 🔴'};
+  const recClass  = recovery || '';
+  const recVal    = recovery ? recLabels[recovery] : 'No registrado';
+
+  // Last gym session summary
+  const gymDays = ['Mar','Jue'];
+  const allExIds = gymDays.flatMap(day => (ROUTINE[day].exercises||[]).map(e=>e.id));
+  const lastSession = Object.keys(logs)
+    .filter(k => !k.startsWith('notes_') && allExIds.some(id => k.startsWith(id+'_')))
+    .sort().reverse()[0];
+  const lastDate = lastSession ? lastSession.split('_').pop() : null;
+
+  document.getElementById('welcome-cards').innerHTML = `
+    <div class="welcome-card ${typeClass}">
+      <div class="welcome-card-icon">${info.type==='gym'?'🏋️':info.type==='crossfit'?'⚡':'😴'}</div>
+      <div>
+        <div class="welcome-card-title">Entrenamiento de hoy</div>
+        <div class="welcome-card-val">${info.label}</div>
+      </div>
+    </div>
+    <div class="welcome-card ${recClass}">
+      <div class="welcome-card-icon">💓</div>
+      <div>
+        <div class="welcome-card-title">Recovery Whoop</div>
+        <div class="welcome-card-val">${recVal}</div>
+      </div>
+    </div>
+    ${lastDate ? `<div class="welcome-card">
+      <div class="welcome-card-icon">📆</div>
+      <div>
+        <div class="welcome-card-title">Último entreno registrado</div>
+        <div class="welcome-card-val">${lastDate}</div>
+      </div>
+    </div>` : ''}
+  `;
+}
+
+function dismissWelcome() {
+  document.getElementById('welcome').classList.add('hide');
+  setTimeout(() => document.getElementById('welcome').style.display='none', 400);
+}
+
+
 function renderToday() {
   const dk = DAYS_IDX[new Date().getDay()];
   const info = ROUTINE[dk];
@@ -770,6 +1043,7 @@ function renderToday() {
     document.getElementById('today-title'),
     document.getElementById('today-tag'),
   );
+  renderVolumeWidget('today-volume');
 }
 
 // ── Routine ──────────────────────────────────────────────────────────────────
@@ -868,21 +1142,27 @@ async function init() {
   document.getElementById('header-subtitle').textContent = 'Cargando datos...';
   await loadData();
   initWhoop();
+  showWelcome();
   renderToday();
   renderDayNav(DAYS_IDX[new Date().getDay()]);
 }
 
 // Expose functions to window (required for onclick handlers with type="module")
-window.showSection   = showSection;
-window.toggleWhoop   = toggleWhoop;
-window.setRecovery   = setRecovery;
-window.toggleEx      = toggleEx;
-window.saveEx        = saveEx;
-window.startTimer    = startTimer;
-window.toggleTimer   = toggleTimer;
-window.stopTimer     = stopTimer;
-window.renderRoutine = renderRoutine;
-window.renderProgress= renderProgress;
+window.toggleEditSet  = toggleEditSet;
+window.showSection    = showSection;
+window.toggleWhoop    = toggleWhoop;
+window.setRecovery    = setRecovery;
+window.toggleEx       = toggleEx;
+window.saveEx         = saveEx;
+window.startTimer     = startTimer;
+window.toggleTimer    = toggleTimer;
+window.stopTimer      = stopTimer;
+window.renderRoutine  = renderRoutine;
+window.renderProgress = renderProgress;
+window.onSetInput     = onSetInput;
+window.confirmFill    = confirmFill;
+window.dismissFill    = dismissFill;
+window.dismissWelcome = dismissWelcome;
 
 init();
 </script>
