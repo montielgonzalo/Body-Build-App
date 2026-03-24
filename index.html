@@ -786,7 +786,6 @@ function renderExList(exercises, dayKey, container, titleEl, tagEl2) {
       .sort().reverse();
     const prevLog = prevSessions.length ? logs[prevSessions[0]] : null;
     const existingNote = logs[`notes_${ex.id}_${td}`] || '';
-    const td = today();
     // Check if this exercise has saved data today (inputs start locked)
     const hasSaved = !!(logs[`${ex.id}_${td}`] && logs[`${ex.id}_${td}`].some(s => s.w || s.r));
     const setsRows = Array.from({length:ex.sets},(_,si) => {
