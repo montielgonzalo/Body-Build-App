@@ -2,7 +2,7 @@
 <html lang="es" style="color-scheme:dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Body Build App</title>
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#0f0f11">
@@ -203,7 +203,7 @@
   }
 
   /* Sets table */
-  .sets-wrap { margin-bottom: 10px; }
+  .sets-wrap { margin-bottom: 10px; position: relative; }
   .sets-head {
     display: grid; grid-template-columns: 28px 1fr 1fr 52px 28px;
     gap: 6px; padding: 0 4px 6px;
@@ -219,7 +219,7 @@
   .set-num { font-size: 12px; color: var(--text3); font-family: 'DM Mono', monospace; }
   .inp {
     background: var(--bg3); border: 1px solid var(--border2);
-    border-radius: 7px; padding: 6px 8px; font-size: 13px;
+    border-radius: 7px; padding: 6px 8px; font-size: 16px;
     color: var(--text); font-family: 'DM Mono', monospace;
     text-align: center; width: 100%; outline: none; transition: border-color .2s;
   }
@@ -408,19 +408,27 @@
   }
   .btn-start:hover { opacity: .85; }
 
-  /* ── Fill-all dialog ── */
-  .fill-dialog {
-    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%) translateY(100%);
-    width: 100%; max-width: 480px; background: var(--bg3);
-    border-top: 1px solid var(--border2); border-radius: var(--r2) var(--r2) 0 0;
-    padding: 16px 20px 32px; z-index: 800; transition: transform .3s ease;
+  /* ── Fill-all inline pill ── */
+  .fill-pill {
+    position: absolute; z-index: 900;
+    background: var(--bg3); border: 1px solid var(--accent);
+    border-radius: 20px; padding: 6px 10px 6px 12px;
+    display: none; align-items: center; gap: 8px;
+    box-shadow: 0 4px 16px #00000050;
+    white-space: nowrap; font-size: 12px; color: var(--text2);
+    animation: pillIn .15s ease;
   }
-  .fill-dialog.show { transform: translateX(-50%) translateY(0); }
-  .fill-dialog h4 { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
-  .fill-dialog p { font-size: 13px; color: var(--text2); margin-bottom: 14px; line-height: 1.5; }
-  .fill-dialog-btns { display: flex; gap: 8px; }
-  .fill-btn { flex: 1; padding: 10px; border-radius: var(--r); font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--border2); background: var(--bg4); color: var(--text2); transition: all .2s; }
-  .fill-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .fill-pill.show { display: flex; }
+  @keyframes pillIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+  .fill-pill-yes {
+    padding: 4px 10px; border-radius: 14px; border: none;
+    background: var(--accent); color: #fff; font-family: inherit;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  .fill-pill-no {
+    background: none; border: none; color: var(--text3);
+    font-size: 16px; cursor: pointer; line-height: 1; padding: 0 2px;
+  }
   .empty-state {
     text-align: center; padding: 40px 20px;
     color: var(--text3); font-size: 14px; line-height: 1.7;
@@ -524,14 +532,11 @@
   <button class="btn-start" onclick="dismissWelcome()">Empezar entrenamiento →</button>
 </div>
 
-<!-- Fill-all dialog -->
-<div class="fill-dialog" id="fill-dialog">
-  <h4 id="fill-dialog-title">Completar series</h4>
-  <p id="fill-dialog-body"></p>
-  <div class="fill-dialog-btns">
-    <button class="fill-btn" onclick="dismissFill()">No, solo esta</button>
-    <button class="fill-btn primary" onclick="confirmFill()">Sí, completar todas</button>
-  </div>
+<!-- Fill-all pill (inline, near input) -->
+<div class="fill-pill" id="fill-pill">
+  <span id="fill-pill-text">¿Igual para todas?</span>
+  <button class="fill-pill-yes" onclick="confirmFill()">Sí</button>
+  <button class="fill-pill-no" onclick="dismissFill()">✕</button>
 </div>
 
 
@@ -717,8 +722,23 @@ function startTimer(secs) {
       document.getElementById('timer-num').classList.add('done');
       document.getElementById('timer-bar').style.width = '0%';
       document.getElementById('timer-toggle').textContent = 'Cerrar';
-      // Vibrate on supported devices
+      // Vibrate on supported devices (Android)
       if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      // Beep sound via Web Audio API (works on iOS + Android)
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        [0, 0.18, 0.36].forEach(t => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.frequency.value = 880;
+          osc.type = 'sine';
+          gain.gain.setValueAtTime(0.4, ctx.currentTime + t);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.15);
+          osc.start(ctx.currentTime + t);
+          osc.stop(ctx.currentTime + t + 0.15);
+        });
+      } catch(e) {}
     }
   }, 1000);
 }
@@ -809,7 +829,7 @@ function renderExList(exercises, dayKey, container, titleEl, tagEl2) {
     const thumbHtml = ex.img
       ? `<img src="${ex.img}" alt="" onerror="this.style.display='none'">`
       : '';
-    return `<div class="ex-card" id="card_${ex.id}">
+    return `<div class="ex-card${hasSaved?' saved':''}" id="card_${ex.id}">
       <div class="ex-head" onclick="toggleEx('${ex.id}')">
         <div class="ex-illus">${thumbHtml}</div>
         <div class="ex-info">
@@ -935,15 +955,13 @@ function renderVolumeWidget(containerId) {
 }
 
 
-let fillPending = null; // { exId, field, value, numSets }
+let fillPending = null;
 let fillDebounce = null;
 
 function onSetInput(exId, setIdx, field, value, numSets) {
-  // Only prompt if it's the first set and value is meaningful
-  if (setIdx !== 0 || !value) return;
+  if (setIdx !== 0 || !value) { dismissFill(); return; }
   clearTimeout(fillDebounce);
   fillDebounce = setTimeout(() => {
-    // Check if other sets are still empty for this field
     const othersEmpty = Array.from({length:numSets},(_,i)=>i)
       .filter(i => i !== 0)
       .some(i => {
@@ -952,12 +970,18 @@ function onSetInput(exId, setIdx, field, value, numSets) {
       });
     if (!othersEmpty) return;
     fillPending = { exId, field, value, numSets };
-    const fieldLabel = field === 'w' ? 'peso' : 'repeticiones';
-    document.getElementById('fill-dialog-title').textContent = `¿Replicar ${fieldLabel}?`;
-    document.getElementById('fill-dialog-body').textContent =
-      `Ingresaste ${value}${field==='w'?'kg':'rep'} en la serie 1. ¿Querés aplicar el mismo valor a las series restantes?`;
-    document.getElementById('fill-dialog').classList.add('show');
-  }, 600);
+    const pill = document.getElementById('fill-pill');
+    const triggerEl = document.getElementById(`${field}_${exId}_0`);
+    if (triggerEl && pill) {
+      const rect = triggerEl.getBoundingClientRect();
+      pill.style.position = 'fixed';
+      pill.style.top = (rect.bottom + 6) + 'px';
+      pill.style.left = rect.left + 'px';
+    }
+    const label = field === 'w' ? `${value}kg a todas` : `${value} reps a todas`;
+    document.getElementById('fill-pill-text').textContent = label;
+    pill.classList.add('show');
+  }, 500);
 }
 
 function confirmFill() {
@@ -972,7 +996,9 @@ function confirmFill() {
 
 function dismissFill() {
   fillPending = null;
-  document.getElementById('fill-dialog').classList.remove('show');
+  clearTimeout(fillDebounce);
+  const pill = document.getElementById('fill-pill');
+  if (pill) pill.classList.remove('show');
 }
 
 // ── Welcome screen ────────────────────────────────────────────────────────────
