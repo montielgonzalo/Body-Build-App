@@ -497,8 +497,95 @@
     font-size: 11px; color: var(--text3);
   }
 
+  /* ── Phase indicator ── */
+  .phase-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px; margin-top: 5px;
+    background: var(--accent-bg); border: 1px solid var(--accent);
+    font-size: 11px; font-weight: 500; color: var(--accent2);
+    cursor: default;
+  }
+  .phase-pill.deload { background: var(--amber-bg); border-color: var(--amber); color: var(--amber); }
+  .phase-pill.rest    { background: var(--bg3); border-color: var(--border2); color: var(--text3); }
+
+  /* ── RM Section ── */
+  .rm-wrap { padding: 14px 20px 0; }
+  .rm-search {
+    width: 100%; padding: 10px 14px; border-radius: var(--r2);
+    background: var(--bg3); border: 1px solid var(--border2);
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px;
+    margin-bottom: 12px; outline: none;
+  }
+  .rm-search:focus { border-color: var(--accent); }
+  .rm-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--r2); overflow: hidden; margin-bottom: 8px;
+    transition: border-color .2s;
+  }
+  .rm-card.has-rm { border-color: var(--accent); }
+  .rm-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px; cursor: pointer; user-select: none; gap: 10px;
+  }
+  .rm-head-left { flex: 1; min-width: 0; }
+  .rm-name { font-size: 14px; font-weight: 500; }
+  .rm-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .rm-badge {
+    font-size: 13px; font-weight: 600; font-family: 'DM Mono', monospace;
+    color: var(--accent2); white-space: nowrap; flex-shrink: 0;
+  }
+  .rm-chevron { color: var(--text3); font-size: 10px; transition: transform .25s; flex-shrink: 0; }
+  .rm-card.open .rm-chevron { transform: rotate(180deg); }
+  .rm-body { display: none; padding: 0 14px 14px; border-top: 1px solid var(--border); }
+  .rm-card.open .rm-body { display: block; }
+
+  .rm-input-row {
+    display: flex; gap: 8px; margin: 12px 0 10px; align-items: flex-end;
+  }
+  .rm-field { flex: 1; }
+  .rm-field label { font-size: 11px; color: var(--text3); display: block; margin-bottom: 4px; }
+  .rm-inp {
+    width: 100%; padding: 8px 10px; border-radius: var(--r);
+    background: var(--bg3); border: 1px solid var(--border2);
+    color: var(--text); font-family: 'DM Mono', monospace; font-size: 16px;
+    text-align: center; outline: none; transition: border-color .2s;
+  }
+  .rm-inp:focus { border-color: var(--accent); }
+  .rm-calc-btn {
+    padding: 8px 14px; border-radius: var(--r); border: none;
+    background: var(--accent); color: #fff; font-family: inherit;
+    font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+    transition: opacity .2s;
+  }
+  .rm-calc-btn:hover { opacity: .85; }
+  .rm-save-btn {
+    width: 100%; padding: 9px; border-radius: var(--r); border: none;
+    background: var(--bg4); border: 1px solid var(--border2);
+    color: var(--text2); font-family: inherit; font-size: 13px;
+    font-weight: 500; cursor: pointer; margin-bottom: 12px;
+    transition: all .2s;
+  }
+  .rm-save-btn:hover { border-color: var(--accent); color: var(--accent2); }
+
+  .rm-pct-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+    margin-bottom: 10px;
+  }
+  .rm-pct-cell {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 8px 6px; text-align: center;
+  }
+  .rm-pct-label { font-size: 10px; color: var(--text3); margin-bottom: 2px; }
+  .rm-pct-val {
+    font-size: 14px; font-weight: 600; font-family: 'DM Mono', monospace;
+    color: var(--text);
+  }
+  .rm-epley-note {
+    font-size: 11px; color: var(--text3); text-align: center; margin-top: 4px;
+  }
+
   /* Section padding fix for bottom nav */
-  #sec-today, #sec-routine, #sec-history, #sec-progress {
+  #sec-today, #sec-routine, #sec-history, #sec-progress, #sec-rm {
     padding-bottom: 20px;
   }
 </style>
@@ -511,6 +598,7 @@
     <div class="header-left">
       <h1>Body Build App</h1>
       <div class="subtitle" id="header-subtitle">Cargando...</div>
+      <div id="phase-pill"></div>
     </div>
     <button class="whoop-pill" onclick="toggleWhoop()" id="whoop-pill">
       <div class="whoop-dot" id="whoop-dot"></div>
@@ -561,6 +649,14 @@
     <div class="hist-list" id="hist-list"></div>
   </div>
 
+  <!-- RM / PR section -->
+  <div class="section" id="sec-rm">
+    <div class="rm-wrap">
+      <input class="rm-search" type="text" id="rm-search" placeholder="🔍 Buscar ejercicio..." oninput="filterRMs(this.value)">
+      <div id="rm-list"></div>
+    </div>
+  </div>
+
   <!-- Progress section -->
   <div class="section" id="sec-progress">
     <div class="prog-wrap">
@@ -601,6 +697,9 @@
   </button>
   <button class="nav-btn" id="nav-routine" onclick="showSection('routine')">
     <span class="nav-icon">📋</span>RUTINA
+  </button>
+  <button class="nav-btn" id="nav-rm" onclick="showSection('rm')">
+    <span class="nav-icon">🏆</span>RMs
   </button>
   <button class="nav-btn" id="nav-history" onclick="showSection('history')">
     <span class="nav-icon">📆</span>HISTORIAL
@@ -745,6 +844,7 @@ const USER_DOC = "users/gonzalo";
 
 // ── State ────────────────────────────────────────────────────────────────────
 let logs = {};
+let rms  = {}; // { exId: { value: number, date: string } }
 let recovery = null;
 let currentSection = 'today';
 let currentRoutineDay = null;
@@ -760,6 +860,7 @@ async function loadData() {
     if (snap.exists()) {
       const data = snap.data();
       logs = data.logs || {};
+      rms  = data.rms  || {};
       const r = (data.recovery || {})[today()];
       if (r) recovery = r;
     }
@@ -786,7 +887,7 @@ async function saveData() {
     try {
       const recoveryData = {};
       if (recovery) recoveryData[today()] = recovery;
-      await setDoc(doc(db, USER_DOC), { logs, recovery: recoveryData }, { merge: true });
+      await setDoc(doc(db, USER_DOC), { logs, rms, recovery: recoveryData }, { merge: true });
     } catch(e) {
       console.warn('Firestore save failed, data cached locally:', e);
     }
@@ -893,14 +994,15 @@ function toast(msg) {
 // ── Sections ─────────────────────────────────────────────────────────────────
 function showSection(sec) {
   currentSection = sec;
-  ['today','routine','history','progress'].forEach(s => {
-    document.getElementById('sec-'+s).classList.toggle('active', s===sec);
-    document.getElementById('nav-'+s).classList.toggle('active', s===sec);
+  ['today','routine','history','progress','rm'].forEach(s => {
+    document.getElementById('sec-'+s)?.classList.toggle('active', s===sec);
+    document.getElementById('nav-'+s)?.classList.toggle('active', s===sec);
   });
-  if (sec==='today') renderToday();
+  if (sec==='today')   renderToday();
   if (sec==='routine') renderRoutine(currentRoutineDay || DAYS_IDX[new Date().getDay()]);
   if (sec==='history') renderHistory();
   if (sec==='progress') renderProgressSelects();
+  if (sec==='rm')      renderRMs();
 }
 
 // ── Render helpers ────────────────────────────────────────────────────────────
@@ -1336,11 +1438,155 @@ function renderProgress() {
     </div>`).join('');
 }
 
-// ── Init ─────────────────────────────────────────────────────────────────────
+// ── Phase indicator ───────────────────────────────────────────────────────────
+const PLAN_START = new Date('2026-05-18'); // Monday week 1
+const PHASES = [
+  { name:'Fase 1', label:'Adaptación',          weeks:[1,4],   color:'accent' },
+  { name:'Fase 2', label:'Hipertrofia',          weeks:[5,10],  color:'accent' },
+  { name:'Fase 3', label:'Fuerza-Hipertrofia',   weeks:[11,16], color:'accent' },
+  { name:'Fase 4', label:'Intensidad alta',      weeks:[17,22], color:'accent' },
+  { name:'Fase 5', label:'Pico + Definición',    weeks:[23,28], color:'accent' },
+  { name:'Cierre', label:'Evaluación 2027',      weeks:[29,30], color:'accent' },
+];
+const DELOAD_WEEKS = [4,10,16,22,28];
+
+function getCurrentPhase() {
+  const now = new Date();
+  const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+  const week = Math.floor((now - PLAN_START) / msPerWeek) + 1;
+  if (week < 1) return { label:'Antes del plan', week:0, isDeload:false, cls:'rest' };
+  if (week > 30) return { label:'Plan completado 🎉', week:30, isDeload:false, cls:'rest' };
+  const phase = PHASES.find(p => week >= p.weeks[0] && week <= p.weeks[1]);
+  const isDeload = DELOAD_WEEKS.includes(week);
+  return {
+    label: isDeload ? `Deload — ${phase?.name}` : `${phase?.name} · Sem ${week}`,
+    sublabel: isDeload ? '😴 Semana de deload' : phase?.label,
+    week,
+    isDeload,
+    cls: isDeload ? 'deload' : 'accent'
+  };
+}
+
+function renderPhasePill() {
+  const pill = document.getElementById('phase-pill');
+  if (!pill) return;
+  const ph = getCurrentPhase();
+  if (!ph.week) { pill.innerHTML = ''; return; }
+  pill.innerHTML = `<div class="phase-pill ${ph.isDeload?'deload':''}" title="${ph.sublabel||''}">
+    ${ph.isDeload ? '😴' : '📅'} ${ph.label}
+  </div>`;
+}
+
+// ── RM Section ────────────────────────────────────────────────────────────────
+// Epley formula: 1RM = weight × (1 + reps/30)
+function epley(w, r) { return r === 1 ? w : Math.round(w * (1 + r / 30) * 4) / 4; }
+
+function pctRow(rm) {
+  const pcts = [50,60,70,75,80,85,90,95];
+  return pcts.map(p => {
+    const val = Math.round(rm * p / 100 * 4) / 4; // round to nearest 0.25
+    return `<div class="rm-pct-cell">
+      <div class="rm-pct-label">${p}%</div>
+      <div class="rm-pct-val">${val}kg</div>
+    </div>`;
+  }).join('');
+}
+
+function renderRMs(filter) {
+  const allEx = ['Mar','Jue'].flatMap(d => ROUTINE[d].exercises || []);
+  const list = document.getElementById('rm-list');
+  if (!list) return;
+  const q = (filter || document.getElementById('rm-search')?.value || '').toLowerCase();
+  const filtered = q ? allEx.filter(e => e.name.toLowerCase().includes(q)) : allEx;
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty-state">No hay ejercicios que coincidan.</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(ex => {
+    const rm = rms[ex.id];
+    const hasRm = rm && rm.value;
+    const badge = hasRm ? `${rm.value}kg` : '—';
+    const metaTxt = hasRm
+      ? `Actualizado: ${rm.date} · Calculado con Epley`
+      : 'Sin RM registrado';
+    const pctGrid = hasRm ? `
+      <div class="rm-pct-grid">${pctRow(rm.value)}</div>
+      <div class="rm-epley-note">Basado en 1RM de ${rm.value}kg</div>` : '';
+    return `<div class="rm-card${hasRm?' has-rm':''}" id="rmcard_${ex.id}">
+      <div class="rm-head" onclick="toggleRM('${ex.id}')">
+        <div class="rm-head-left">
+          <div class="rm-name">${ex.name}</div>
+          <div class="rm-meta">${metaTxt}</div>
+        </div>
+        <div class="rm-badge">${badge}</div>
+        <div class="rm-chevron">▼</div>
+      </div>
+      <div class="rm-body">
+        <div class="rm-input-row">
+          <div class="rm-field">
+            <label>1RM directo (kg)</label>
+            <input class="rm-inp" type="number" id="rm_direct_${ex.id}" placeholder="${hasRm?rm.value:'ej: 100'}" min="0" step="0.5" value="${hasRm?rm.value:''}">
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:8px;text-align:center">— o calculalo desde un set —</div>
+        <div class="rm-input-row">
+          <div class="rm-field">
+            <label>Peso movido (kg)</label>
+            <input class="rm-inp" type="number" id="rm_w_${ex.id}" placeholder="ej: 90" min="0" step="0.5">
+          </div>
+          <div class="rm-field">
+            <label>Reps hechas</label>
+            <input class="rm-inp" type="number" id="rm_r_${ex.id}" placeholder="ej: 5" min="1" max="30">
+          </div>
+          <button class="rm-calc-btn" onclick="calcRM('${ex.id}')">Calcular</button>
+        </div>
+        <button class="rm-save-btn" onclick="saveRM('${ex.id}')">💾 Guardar RM</button>
+        ${pctGrid}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleRM(exId) {
+  const card = document.getElementById('rmcard_'+exId);
+  if (!card) return;
+  const isOpen = card.classList.contains('open');
+  document.querySelectorAll('.rm-card.open').forEach(c => c.classList.remove('open'));
+  if (!isOpen) card.classList.add('open');
+}
+
+function calcRM(exId) {
+  const w = parseFloat(document.getElementById(`rm_w_${exId}`)?.value);
+  const r = parseInt(document.getElementById(`rm_r_${exId}`)?.value);
+  if (!w || !r || r < 1) { toast('Ingresá peso y reps'); return; }
+  const calc = epley(w, r);
+  const directInp = document.getElementById(`rm_direct_${exId}`);
+  if (directInp) directInp.value = calc;
+  toast(`1RM estimado: ${calc}kg`);
+}
+
+function saveRM(exId) {
+  const val = parseFloat(document.getElementById(`rm_direct_${exId}`)?.value);
+  if (!val || val <= 0) { toast('Ingresá un valor válido'); return; }
+  rms[exId] = { value: val, date: today() };
+  saveData();
+  toast('✓ RM guardado');
+  renderRMs();
+  // Re-open the card
+  setTimeout(() => {
+    const card = document.getElementById('rmcard_'+exId);
+    if (card) card.classList.add('open');
+  }, 50);
+}
+
+function filterRMs(val) { renderRMs(val); }
+
+
 async function init() {
   document.getElementById('header-subtitle').textContent = 'Cargando datos...';
   await loadData();
   initWhoop();
+  renderPhasePill();
   showWelcome();
   renderToday();
   renderDayNav(DAYS_IDX[new Date().getDay()]);
@@ -1363,6 +1609,10 @@ window.onSetInput     = onSetInput;
 window.confirmFill    = confirmFill;
 window.dismissFill    = dismissFill;
 window.dismissWelcome = dismissWelcome;
+window.toggleRM       = toggleRM;
+window.calcRM         = calcRM;
+window.saveRM         = saveRM;
+window.filterRMs      = filterRMs;
 
 init();
 </script>
